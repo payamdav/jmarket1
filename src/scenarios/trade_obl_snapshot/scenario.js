@@ -1,6 +1,7 @@
 import { pubsub } from '../../lib/pubsub.js';
 import { Chart } from './chart.js';
 import {binary_file_reader, binary_file_reader_obl_snapshots} from '../../lib/files/binaryReader.js';
+import {auto_zscore} from '../../lib/ta/statistics/statistics.js'
 
 
 class Scenario {
@@ -38,6 +39,25 @@ class Scenario {
             if (!isNaN(cmd)) {
                 let idx = parseInt(cmd);
                 this.chart.update_obl_draw(idx);
+
+
+                // review required
+
+                let eps = 0.00000001;
+                let l1 = this.chart.obl.l1;
+                let l2 = this.chart.obl.l2;
+                let bids = this.chart.obl.bids[idx].reverse();
+                let asks = this.chart.obl.asks[idx];
+                let ask_start = asks.findIndex(x => x > eps);
+                let bid_start = bids.findIndex(x => x > eps);
+                let ask_end = ask_start + 200 < asks.length ? ask_start + 200 : asks.length - 1;
+                let bid_end = bid_start + 200 < bids.length ? bid_start + 200 : bids.length - 1;
+                let asks_zscore = auto_zscore(asks.slice(ask_start, ask_end));
+                let bids_zscore = auto_zscore(bids.slice(bid_start, bid_end));
+                console.log("ask zscore", asks_zscore.map(x => Math.round(x)));
+                console.log("bid zscore", bids_zscore.map(x => Math.round(x)).reverse());
+        
+
             }
 
         });
