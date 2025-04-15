@@ -11,6 +11,7 @@ class Scenario {
     async init() {
         await this.chart.initChart('scichart-root');
         this.chart.initAxes().initModifiers().init_annotations();
+        this.chart.init_series();
 
         // Menu Handling
         pubsub.subscribe('overlay_menu', (m) => {
@@ -34,6 +35,11 @@ class Scenario {
             if (cmd === 'draw candles 1m vwap') this.draw_candle_1m_vwap();
             if (cmd === 'draw candles 1h hl') this.draw_candle_1h_hl();
             if (cmd === 'draw candles 1h vwap') this.draw_candle_1h_vwap();
+            if (!isNaN(cmd)) {
+                let idx = parseInt(cmd);
+                this.chart.update_obl_draw(idx);
+            }
+
         });
     }
 

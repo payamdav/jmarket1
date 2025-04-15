@@ -5,6 +5,7 @@ import {
     DateTimeNumericAxis,
     EAutoRange,
     LeftAlignedOuterVerticallyStackedAxisLayoutStrategy,
+    BottomAlignedOuterHorizontallyStackedAxisLayoutStrategy,
     EAxisAlignment,
 
     XyDataSeries,
@@ -59,21 +60,22 @@ export class Chart {
     }
 
     initAxes() {
-        this.sciChartSurface.layoutManager.leftOuterAxesLayoutStrategy = new LeftAlignedOuterVerticallyStackedAxisLayoutStrategy();
+        this.sciChartSurface.layoutManager.bottomOuterAxesLayoutStrategy = new BottomAlignedOuterHorizontallyStackedAxisLayoutStrategy();
 
-        this.xAxis1 = new DateTimeNumericAxis(this.wasmContext, { axisTitle: "Time" });
+        this.xAxis2 = new NumericAxis(this.wasmContext, { axisTitle: "asks", id: "xAxis2", stackedAxisLength: "20%" });
+        this.sciChartSurface.xAxes.add(this.xAxis2);
+        this.xAxis2.autoRange = EAutoRange.Always;
+
+        this.xAxis1 = new DateTimeNumericAxis(this.wasmContext, { axisTitle: "Time", id: "DefaultAxisId", stackedAxisLength: "60%" });
         this.sciChartSurface.xAxes.add(this.xAxis1);
 
-        this.yAxis3 = new NumericAxis(this.wasmContext, { axisTitle: "Asks", id: "yAxis3", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "20%" });
-        this.sciChartSurface.yAxes.add(this.yAxis3);
+        this.xAxis3 = new NumericAxis(this.wasmContext, { axisTitle: "bids", id: "xAxis3", stackedAxisLength: "20%" });
+        this.sciChartSurface.xAxes.add(this.xAxis3);
+        this.xAxis3.autoRange = EAutoRange.Always;
 
-        this.yAxis1 = new NumericAxis(this.wasmContext, { axisTitle: "Levels", id: "DefaultAxisId", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "60%" });
+        this.yAxis1 = new NumericAxis(this.wasmContext, { axisTitle: "Levels", id: "DefaultAxisId", axisAlignment: EAxisAlignment.Left });
         this.sciChartSurface.yAxes.add(this.yAxis1);
-        // this.yAxis1.autoRange = EAutoRange.Always;
-
-        this.yAxis2 = new NumericAxis(this.wasmContext, { axisTitle: "Bids", id: "yAxis2", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "20%", flippedCoordinates: true });
-        this.sciChartSurface.yAxes.add(this.yAxis2);
-
+        this.yAxis1.autoRange = EAutoRange.Always;
 
         return this;
     }
@@ -131,6 +133,37 @@ export class Chart {
         // get gmt date from timestamp
         // let gmtDate = new Date(x * 1000).toUTCString();
         // console.log(x, y, gmtDate);
+
+    }
+
+    init_series() {
+        this.asksDataSeries = new XyDataSeries(this.wasmContext, {
+            dataSeriesName: "Asks",
+            containsNaN: false, // set to false to avoid NaN values in the series,
+            // isSorted: false // set to true if the x-values are sorted, this can improve performance
+        });
+        this.asksSeries = new XyScatterRenderableSeries(this.wasmContext, {
+            dataSeries: this.asksDataSeries,
+            xAxisId: "xAxis2",
+        });
+        this.sciChartSurface.renderableSeries.add(this.asksSeries);
+
+        this.bidsDataSeries = new XyDataSeries(this.wasmContext, {
+            dataSeriesName: "Bids",
+            containsNaN: false, // set to false to avoid NaN values in the series,
+            // isSorted: false // set to true if the x-values are sorted, this can improve performance
+        });
+        this.bidsSeries = new XyScatterRenderableSeries(this.wasmContext, {
+            dataSeries: this.bidsDataSeries,
+            xAxisId: "xAxis3",
+        });
+        this.sciChartSurface.renderableSeries.add(this.bidsSeries);
+
+        this.obl_verticalLine = new VerticalLineAnnotation({x1: 0, stroke: "red", strokeThickness: 2, annotationLayer: EAnnotationLayer.Background, isHidden: true,});
+        this.sciChartSurface.annotations.add(this.obl_verticalLine);
+
+
+        return this;
 
     }
 
@@ -233,6 +266,23 @@ export class Chart {
         });
         
         this.sciChartSurface.renderableSeries.add(lineSeries);
+
+    }
+
+    update_obl_draw(idx) {
+        let levs = [];
+        for (let i = this.obl.l1; i <= this.obl.l2; i++) {
+            levs.push(i);
+        }
+        this.bidsDataSeries.clear();
+        this.asksDataSeries.clear();
+
+        this.asksDataSeries.appendRange(this.obl.asks[idx], levs);
+        this.bidsDataSeries.appendRange(this.obl.bids[idx], levs);
+
+        this.obl_verticalLine.x1 = this.obl.t[idx]
+        this.obl_verticalLine.isHidden = false;
+        // console.log(this.obl.t[idx]);
 
     }
 
