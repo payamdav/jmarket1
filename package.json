@@ -1,0 +1,15 @@
+{
+  "name": "jmarket1",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild index=src/index.js --bundle --outdir=js",
+    "bw": "esbuild index=src/index.js --bundle --outdir=js --sourcemap --watch"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.0"
+  },
+  "dependencies": {
+    "scichart": "^3.5.727"
+  }
+}

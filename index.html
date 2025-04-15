@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>jmarket1</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+
+    <drag-win style="left: 10px; top: 10px; width: 1500px; height: 760px;">
+      <div id="scichart-root" style="position: absolute; width: 1460px; height: 720px; margin: 20px;" ></div>
+    </drag-win>
+    
+    <drag-win style="left: 1550px; top: 10px; width: 300px; height: 380px;">
+      <div id="scichart-root-2" style="position: absolute; width: 260px; height: 340px; margin: 20px;" ></div>
+    </drag-win>
+
+    <drag-win style="left: 1550px; top: 390px; width: 300px; height: 380px;">
+      <div id="scichart-root-3" style="position: absolute; width: 260px; height: 340px; margin: 20px;" ></div>
+    </drag-win>
+
+    <drag-win style="left: 10px; top: 780px; width: 1000px; height: 40px; padding: 0px;">
+      <pub-button name="Reset" topic="overlay_menu" message="reset"></pub-button>
+      <pub-button name="Pause" topic="overlay_menu" message="pause"></pub-button>
+      <pub-button name="Resume" topic="overlay_menu" message="resume"></pub-button>
+      <pub-button name="FitX" topic="overlay_menu" message="fitx"></pub-button>
+      <pub-button name="FitY" topic="overlay_menu" message="fity"></pub-button>
+      <pub-button name="Fit" topic="overlay_menu" message="fitxy"></pub-button>
+      <pub-button name="Reset Simulator" topic="overlay_menu" message="resetSimulator"></pub-button>
+      <pub-button name="Slower" topic="overlay_menu" message="run_slower"></pub-button>
+      <pub-button name="Faster" topic="overlay_menu" message="run_faster"></pub-button>
+      <pubsub-info title="Speed" topic="loop_sleep_value" ></pubsub-info>
+      <pub-button name="Clear Bases" topic="overlay_menu" message="clear_bases"></pub-button>
+    </drag-win>
+
+    <drag-win style="left: 10px; top: 820px; width: 1000px; height: 40px; padding: 0px;">
+      <pub-cmd></pub-cmd>
+    </drag-win>
+
+    <script type="module" src="js/index.js"></script>
+
+  </body>
+
+</html>

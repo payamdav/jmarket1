@@ -1,0 +1,5 @@
+/node_modules
+/scichart2d.data
+/scichart2d.wasm
+/js
+js/index.js
