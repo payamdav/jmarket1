@@ -284,6 +284,9 @@ export class Chart {
         this.obl_verticalLine.isHidden = false;
         // console.log(this.obl.t[idx]);
 
+        console.log(this.asks_anomalies);
+        console.log(this.bids_anomalies);
+
     }
 
 
