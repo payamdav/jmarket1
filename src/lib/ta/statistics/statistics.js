@@ -63,5 +63,3 @@ export function anomalies_bounds_by_iqr(arr) {
     return { lowerBound, upperBound };
 }
 
-
-

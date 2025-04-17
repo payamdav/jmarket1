@@ -1,7 +1,8 @@
 import { pubsub } from '../../lib/pubsub.js';
 import { Chart } from './chart.js';
 import {binary_file_reader, binary_file_reader_obl_snapshots} from '../../lib/files/binaryReader.js';
-import {anomalies_bounds_by_iqr} from '../../lib/ta/statistics/statistics.js'
+// import {anomalies_bounds_by_iqr} from '../../lib/ta/statistics/statistics.js'
+import {anomaly_finder} from '../../lib/ta/statistics/anomaly_finder.js'
 
 
 class Scenario {
@@ -42,7 +43,11 @@ class Scenario {
 
                 // review required
 
-                let eps = 0.00000001;
+                const eps = 0.00000001;
+                const anomaly_threshold = 6;
+                const distance = 5;
+                const levels = 400;
+
                 let l1 = this.chart.obl.l1;
                 let l2 = this.chart.obl.l2;
                 // console.log(this.chart.obl);
@@ -50,27 +55,45 @@ class Scenario {
                 let asks = [...this.chart.obl.asks[idx]];
                 let ask_start = asks.findIndex(x => x > eps);
                 let bid_start = bids.length - 1 - bids.reverse().findIndex(x => x > eps);
-                let ask_end = ask_start + 200 < asks.length ? ask_start + 200 : asks.length - 1;
-                let bid_end = bid_start - 200 >= 0 ? bid_start - 200 : 0;
+                let ask_end = ask_start + levels < asks.length ? ask_start + levels : asks.length - 1;
+                let bid_end = bid_start - levels >= 0 ? bid_start - levels : 0;
                 // console.log(`l1: ${l1} - l2: ${l2} - Bids Length: ${bids.length} - Asks Length: ${asks.length}`);
                 // console.log(`ask start ${ask_start} end ${ask_end}`);
                 // console.log(`bid start ${bid_start} end ${bid_end}`);
-                let asks_bounds = anomalies_bounds_by_iqr(asks.slice(ask_start, ask_end));
-                let bids_bounds = anomalies_bounds_by_iqr(bids.slice(bid_end, bid_start + 1));
+                let asks_slice = asks.slice(ask_start, ask_end);
+                let bids_slice = bids.slice(bid_end, bid_start + 1);
+                // console.log('asks_slice', asks_slice);
+                // console.log('bids_slice', bids_slice);
+                // console.log('-----------------------');
+                for (let v of asks_slice) {
+                    if (v < -eps) {
+                        console.log('ask error: ', v);
+                    }
+                }
+                for (let v of bids_slice) {
+                    if (v < -eps) {
+                        console.log('bid error: ', v);
+                    }
+                }
+
+                let asks_scores = anomaly_finder(asks_slice, 0.1, anomaly_threshold, distance, true);
+                let bids_scores = anomaly_finder(bids_slice, 0.1, anomaly_threshold, distance, false);
+
+                // console.log('asks_scores', asks_scores);
+                // console.log('bids_scores', bids_scores);
+
                 this.chart.asks_anomalies = [];
                 this.chart.bids_anomalies = [];
-                for (let i = ask_start; i < ask_end; i++) {
-                    if (asks[i] > asks_bounds.upperBound) {
-                        this.chart.asks_anomalies.push(i + l1);
-                    }
-
-                }
-                for (let i = bid_start; i > bid_end; i--) {
-                    if (bids[i] > bids_bounds.upperBound) {
-                        this.chart.bids_anomalies.push(i + l1);
+                for (let i = 0; i < asks_scores.length; i++) {
+                    if (asks_scores[i] > anomaly_threshold) {
+                        this.chart.asks_anomalies.push({level: i + ask_start + l1, score: asks_scores[i]});
                     }
                 }
-        
+                for (let i = 0; i < bids_scores.length; i++) {
+                    if (bids_scores[i] > anomaly_threshold) {
+                        this.chart.bids_anomalies.push({level: i + bid_end + l1, score: bids_scores[i]});
+                    }
+                }
 
 
                 this.chart.update_obl_draw(idx);

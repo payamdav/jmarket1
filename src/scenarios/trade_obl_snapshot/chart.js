@@ -12,6 +12,7 @@ import {
     NumberRange,
 
     VerticalLineAnnotation,
+    HorizontalLineAnnotation,
     ELabelPlacement,
     EAnnotationLayer,
     BoxAnnotation,
@@ -113,7 +114,6 @@ export class Chart {
         return this;
     }
 
-
     reset() {
         this.trades.clear();
         this.click_verticalLine.isHidden = true;
@@ -159,8 +159,11 @@ export class Chart {
         });
         this.sciChartSurface.renderableSeries.add(this.bidsSeries);
 
-        this.obl_verticalLine = new VerticalLineAnnotation({x1: 0, stroke: "red", strokeThickness: 2, annotationLayer: EAnnotationLayer.Background, isHidden: true,});
+        this.obl_verticalLine = new VerticalLineAnnotation({x1: 0, stroke: "red", strokeThickness: 2, annotationLayer: EAnnotationLayer.Background, isHidden: true});
         this.sciChartSurface.annotations.add(this.obl_verticalLine);
+
+        this.asks_bids_lines = [];
+
 
 
         return this;
@@ -181,7 +184,8 @@ export class Chart {
             strokeThickness: strokeThickness,
             dataSeries: dataSeries,
             // set flag isDigitalLine = true to enable a digital (step) line
-            isDigitalLine: isDigitalLine
+            isDigitalLine: isDigitalLine,
+            isVisible: false
         });
         
         this.sciChartSurface.renderableSeries.add(lineSeries);
@@ -222,7 +226,8 @@ export class Chart {
             strokeThickness: 2,
             dataSeries: dataSeries,
             // set flag isDigitalLine = true to enable a digital (step) line
-            isDigitalLine: true
+            isDigitalLine: true,
+            isVisible: false
         });
         
         this.sciChartSurface.renderableSeries.add(lineSeries);
@@ -286,6 +291,37 @@ export class Chart {
 
         console.log(this.asks_anomalies);
         console.log(this.bids_anomalies);
+
+        for (let i = 0; i < this.asks_bids_lines.length; i++) {
+            this.sciChartSurface.annotations.remove(this.asks_bids_lines[i]);
+        }
+        this.asks_bids_lines = [];
+
+        for (let i = 0; i < this.asks_anomalies.length; i++) {
+            const item = this.asks_anomalies[i];
+            const item_annot = new HorizontalLineAnnotation({
+                showLabel: false,
+                stroke: "orange",
+                strokeThickness: Math.floor(item.score/3),
+                y1: item.level,
+                annotationLayer: EAnnotationLayer.BelowChart,
+            });
+            this.sciChartSurface.annotations.add(item_annot);
+            this.asks_bids_lines.push(item_annot);
+        }
+
+        for (let i = 0; i < this.bids_anomalies.length; i++) {
+            const item = this.bids_anomalies[i];
+            const item_annot = new HorizontalLineAnnotation({
+                showLabel: false,
+                stroke: "purple",
+                strokeThickness: Math.floor(item.score/3),
+                y1: item.level,
+                annotationLayer: EAnnotationLayer.BelowChart,
+            });
+            this.sciChartSurface.annotations.add(item_annot);
+            this.asks_bids_lines.push(item_annot);
+        }
 
     }
 
