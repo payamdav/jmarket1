@@ -70,7 +70,7 @@ export class Chart {
         this.xAxis1 = new DateTimeNumericAxis(this.wasmContext, { axisTitle: "Time", id: "DefaultAxisId",  axisAlignment: EAxisAlignment.Bottom });
         this.sciChartSurface.xAxes.add(this.xAxis1);
 
-        this.yAxis1 = new NumericAxis(this.wasmContext, { axisTitle: "Price", id: "DefaultAxisId", axisAlignment: EAxisAlignment.Left });
+        this.yAxis1 = new NumericAxis(this.wasmContext, { axisTitle: "Levels", id: "DefaultAxisId", axisAlignment: EAxisAlignment.Left });
         this.sciChartSurface.yAxes.add(this.yAxis1);
         this.yAxis1.autoRange = EAutoRange.Always;
 
@@ -153,7 +153,7 @@ export class Chart {
             dataSeries: dataSeries,
             // set flag isDigitalLine = true to enable a digital (step) line
             isDigitalLine: isDigitalLine,
-            isVisible: true
+            isVisible: false
         });
         
         this.sciChartSurface.renderableSeries.add(lineSeries);

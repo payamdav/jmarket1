@@ -59,26 +59,28 @@ class Scenario {
         await this.init();
         await this.load_trades();
         await this.load_zigzag();
-        await this.load_stepper();
-        // await this.load_volume_areas();
+        await this.load_vwl();
+        await this.load_volume_areas();
 
     }
 
     async load_trades() {
-        let [t, l] = await binary_file_reader("adausdt_trades", "size_t,double");
+        let [t, l] = await binary_file_reader("trades_chart_data", "size_t,size_t");
         this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Trades", color: "#FF6600", isDigitalLine: true, strokeThickness: 2});
     }
 
     async load_zigzag() {
-        let [t, l] = await binary_file_reader("adausdt_zigzag_vwap_h", "size_t,double");
-        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "adausdt_zigzag_vwap_h", color: "#006666", strokeThickness: 2});
-        [t, l] = await binary_file_reader("adausdt_zigzag_vwap_m", "size_t,double");
-        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "adausdt_zigzag_vwap_m", color: "#666600", strokeThickness: 2});
+        let [t, l, h] = await binary_file_reader("zigzag_1", "size_t,size_t,bool");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Z1", color: "#006666", strokeThickness: 2});
+        [t, l, h] = await binary_file_reader("zigzag_2", "size_t,size_t,bool");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Z2", color: "#006600", strokeThickness: 2});
+        [t, l, h] = await binary_file_reader("zigzag_3", "size_t,size_t,bool");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Z3", color: "#00ff00", strokeThickness: 2});
     }
 
-    async load_stepper() {
-        let [t, l] = await binary_file_reader("adausdt_stepper", "size_t,double");
-        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "stepper", color: "#FFFFFF", isDigitalLine: true, strokeThickness: 2});
+    async load_vwl() {
+        let [t, l] = await binary_file_reader("candles_vwl", "size_t,size_t");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "vwl", color: "#FFFFFF", isDigitalLine: false, strokeThickness: 2});
     }
 
     async load_volume_areas() {
