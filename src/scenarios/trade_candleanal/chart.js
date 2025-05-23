@@ -23,6 +23,7 @@ import {
     FastCandlestickRenderableSeries,
     FastMountainRenderableSeries,
     FastErrorBarsRenderableSeries,
+    FastColumnRenderableSeries,
 
     EErrorDirection,
     EErrorMode,
@@ -66,13 +67,30 @@ export class Chart {
     }
 
     initAxes() {
+        this.sciChartSurface.layoutManager.leftOuterAxesLayoutStrategy = new LeftAlignedOuterVerticallyStackedAxisLayoutStrategy();
 
         this.xAxis1 = new DateTimeNumericAxis(this.wasmContext, { axisTitle: "Time", id: "DefaultAxisId",  axisAlignment: EAxisAlignment.Bottom });
         this.sciChartSurface.xAxes.add(this.xAxis1);
 
-        this.yAxis1 = new NumericAxis(this.wasmContext, { axisTitle: "Price", id: "DefaultAxisId", axisAlignment: EAxisAlignment.Left });
+        this.yAxis1 = new NumericAxis(this.wasmContext, { axisTitle: "Price", id: "DefaultAxisId", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "59%" });
         this.sciChartSurface.yAxes.add(this.yAxis1);
         this.yAxis1.autoRange = EAutoRange.Always;
+
+        this.yAxisVol = new NumericAxis(this.wasmContext, { axisTitle: "Vol", id: "yAxisVol", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "10%" });
+        this.sciChartSurface.yAxes.add(this.yAxisVol);
+        this.yAxisVol.autoRange = EAutoRange.Always;
+
+        this.yAxisVols = new NumericAxis(this.wasmContext, { axisTitle: "Vols", id: "yAxisVols", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "10%" });
+        this.sciChartSurface.yAxes.add(this.yAxisVols);
+        this.yAxisVols.autoRange = EAutoRange.Always;
+
+        this.yAxisVolb = new NumericAxis(this.wasmContext, { axisTitle: "Volb", id: "yAxisVolb", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "10%" });
+        this.sciChartSurface.yAxes.add(this.yAxisVolb);
+        this.yAxisVolb.autoRange = EAutoRange.Always;
+
+        this.yAxisVold = new NumericAxis(this.wasmContext, { axisTitle: "Vold", id: "yAxisVold", axisAlignment: EAxisAlignment.Left, stackedAxisLength: "10%" });
+        this.sciChartSurface.yAxes.add(this.yAxisVold);
+        this.yAxisVold.autoRange = EAutoRange.Always;
 
         return this;
     }
@@ -236,6 +254,27 @@ export class Chart {
 
     }
 
+
+    draw_columns({t = [], l = [], name = "", color = "#FF6600", yAxisId = "DefaultAxisId"}) {
+        const dataSeries = new XyDataSeries(this.wasmContext, {
+            xValues: t,
+            yValues: l,
+            dataSeriesName: name,
+            containsNaN: false, // set to false to avoid NaN values in the series,
+            isSorted: true // set to true if the x-values are sorted, this can improve performance
+        });
+
+        const series = new FastColumnRenderableSeries(this.wasmContext, {
+            stroke: color,
+            fill: color,
+            dataSeries: dataSeries,
+            yAxisId: yAxisId,
+            isVisible: true
+        });
+        
+        this.sciChartSurface.renderableSeries.add(series);
+
+    }
 
 
 

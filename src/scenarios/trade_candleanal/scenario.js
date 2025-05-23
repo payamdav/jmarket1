@@ -60,6 +60,7 @@ class Scenario {
         await this.load_trades();
         await this.load_zigzag();
         await this.load_stepper();
+        await this.load_vols();
         // await this.load_volume_areas();
 
     }
@@ -80,6 +81,17 @@ class Scenario {
         let [t, l] = await binary_file_reader("adausdt_stepper", "size_t,double");
         this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "stepper", color: "#FFFFFF", isDigitalLine: true, strokeThickness: 2});
     }
+
+    async load_vols() {
+        let [t, v, vs, vb, vd] = await binary_file_reader("adausdt_vbox", "size_t,double,double,double,double");
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: v, name: "Volume", color: "#FF6600", yAxisId: "yAxisVol"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vs, name: "Volumes", color: "#FF6600", yAxisId: "yAxisVols"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vb, name: "Volumeb", color: "#FF6600", yAxisId: "yAxisVolb"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vd, name: "Volumed", color: "#FF6600", yAxisId: "yAxisVold"});
+    }
+
+
+
 
     async load_volume_areas() {
         let [rank, ts_center, ts_start, ts_end, level_center, max_level, avg_volume] = await binary_file_reader("volume_areas", "size_t,size_t,size_t,size_t,size_t,size_t,double");
