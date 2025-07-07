@@ -61,6 +61,7 @@ class Scenario {
         await this.load_zigzag();
         await this.load_stepper();
         await this.load_vols();
+        await this.load_vols2();
         // await this.load_volume_areas();
 
     }
@@ -84,10 +85,18 @@ class Scenario {
 
     async load_vols() {
         let [t, v, vs, vb, vd] = await binary_file_reader("adausdt_vbox", "size_t,double,double,double,double");
-        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: v, name: "Volume", color: "#FF6600", yAxisId: "yAxisVol"});
-        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vs, name: "Volumes", color: "#FF6600", yAxisId: "yAxisVols"});
-        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vb, name: "Volumeb", color: "#FF6600", yAxisId: "yAxisVolb"});
-        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vd, name: "Volumed", color: "#FF6600", yAxisId: "yAxisVold"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: v, name: "Volume vbox", color: "#FF6600", yAxisId: "yAxisVol"});
+        // this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vs, name: "Volumes", color: "#FF6600", yAxisId: "yAxisVols"});
+        // this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vb, name: "Volumeb", color: "#FF6600", yAxisId: "yAxisVolb"});
+        // this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vd, name: "Volumed", color: "#FF6600", yAxisId: "yAxisVold"});
+    }
+
+    async load_vols2() {
+        let [t, v, vs, vb, vd] = await binary_file_reader("adausdt_vbox2", "size_t,double,double,double,double");
+        // this.chart.draw_columns({t: t.map(x => x / 1000.0), l: v, name: "Volume", color: "#FF6600", yAxisId: "yAxisVol"});
+        // this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vs, name: "Volumes", color: "#FF6600", yAxisId: "yAxisVols"});
+        // this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vb, name: "Volumeb", color: "#FF6600", yAxisId: "yAxisVolb"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vd, name: "Volumed vbox2", color: "#FF6600", yAxisId: "yAxisVold"});
     }
 
 
