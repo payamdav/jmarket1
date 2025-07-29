@@ -57,6 +57,8 @@ class Scenario {
         await this.init();
         await this.load_trades();
         await this.load_zigzag();
+        await this.load_trade_zigzag();
+        await this.load_long_entry_points();
         this.up_trend_lines = await trendline_binary_file_reader("up_trend_line");
         this.current_up_trend_line = 0;
 
@@ -90,49 +92,19 @@ class Scenario {
 
     }
 
-    async load_candles_1() {
-        let [t, o, h, l, c] = await binary_file_reader("candles_1", "size_t,double,double,double,double");
-        this.chart.draw_candlestick({
-            t: t.map(x => x / 1000.0 + 0.5),
-            o: o,
-            h: h,
-            l: l,
-            c: c,
-            name: "candles_1",
-            color: "#00FF00",
-        });
-    }
-
-    async load_candles_60() {
-        let [t, o, h, l, c] = await binary_file_reader("candles_60", "size_t,double,double,double,double");
-        this.chart.draw_candlestick({
-            t: t.map(x => x / 1000.0 + 30),
-            o: o,
-            h: h,
-            l: l,
-            c: c,
-            name: "candles_60",
-            color: "#00FF00",
-        });
-    }
-
-    async load_candles_3600() {
-        let [t, o, h, l, c] = await binary_file_reader("candles_3600", "size_t,double,double,double,double");
-        this.chart.draw_candlestick({
-            t: t.map(x => x / 1000.0 + 1800),
-            o: o,
-            h: h,
-            l: l,
-            c: c,
-            name: "candles_3600",
-            color: "#00FF00",
-        });
-    }
-
-
     async load_zigzag() {
         let [t, l] = await binary_file_reader("zigzag", "size_t,double");
-        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "zigzag", color: "#006666", strokeThickness: 2});
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "up trend zigzag", color: "#006666", strokeThickness: 2});
+    }
+
+    async load_trade_zigzag() {
+        let [t, l] = await binary_file_reader("trades_zigzag", "size_t,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "trades_zigzag", strokeThickness: 2});
+    }
+
+    async load_long_entry_points() {
+        let [t, l] = await binary_file_reader("long_entry_points", "size_t,double");
+        this.chart.draw_scatter({t: t.map(x => x / 1000.0), l: l, name: "long_entry_points", color: "#00FF00", size: 5});
     }
 
     async load_stepper() {

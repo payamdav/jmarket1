@@ -196,7 +196,7 @@ export class Chart {
         });
         const scatterSeries = new XyScatterRenderableSeries(this.wasmContext, {
             dataSeries: dataSeries,
-            pointMarker: new EllipsePointMarker({
+            pointMarker: new EllipsePointMarker(this.wasmContext, {
                 stroke: color,
                 fill: color,
                 width: size,
