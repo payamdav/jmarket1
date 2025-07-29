@@ -56,6 +56,7 @@ class Scenario {
     async run() {
         await this.init();
         await this.load_trades();
+        await this.load_zigzag();
         this.up_trend_lines = await trendline_binary_file_reader("up_trend_line");
         this.current_up_trend_line = 0;
 
@@ -130,10 +131,8 @@ class Scenario {
 
 
     async load_zigzag() {
-        let [t, l] = await binary_file_reader("adausdt_zigzag_vwap_h", "size_t,double");
-        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "adausdt_zigzag_vwap_h", color: "#006666", strokeThickness: 2});
-        [t, l] = await binary_file_reader("adausdt_zigzag_vwap_m", "size_t,double");
-        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "adausdt_zigzag_vwap_m", color: "#666600", strokeThickness: 2});
+        let [t, l] = await binary_file_reader("zigzag", "size_t,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "zigzag", color: "#006666", strokeThickness: 2});
     }
 
     async load_stepper() {
