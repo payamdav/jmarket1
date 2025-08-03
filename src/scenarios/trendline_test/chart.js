@@ -133,6 +133,15 @@ export class Chart {
         this.sciChartSurface.annotations.add(this.up_trend_max);
         this.up_trend_min = new LineAnnotation({x1: 0, x2: 0, y1: 0, y2: 0, stroke: "red", strokeThickness: 2, annotationLayer: EAnnotationLayer.Background, isHidden: true,});
         this.sciChartSurface.annotations.add(this.up_trend_min);
+
+        // initialize orders annotations
+        this.order_sl = new LineAnnotation({x1: 0, x2: 0, y1: 0, y2: 0, stroke: "red", strokeThickness: 4, annotationLayer: EAnnotationLayer.Background, isHidden: true,});
+        this.sciChartSurface.annotations.add(this.order_sl);
+        this.order_tp = new LineAnnotation({x1: 0, x2: 0, y1: 0, y2: 0, stroke: "green", strokeThickness: 4, annotationLayer: EAnnotationLayer.Background, isHidden: true,});
+        this.sciChartSurface.annotations.add(this.order_tp);
+        this.order_line = new LineAnnotation({x1: 0, x2: 0, y1: 0, y2: 0, stroke: "blue", strokeThickness: 2, annotationLayer: EAnnotationLayer.Background, isHidden: true,});
+        this.sciChartSurface.annotations.add(this.order_line);
+
         return this;
     }
 

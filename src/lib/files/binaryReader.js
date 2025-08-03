@@ -171,7 +171,7 @@ export async function binary_file_reader_obl_snapshots(filename) {
 
 export async function trendline_binary_file_reader(filename) {
     filename = `./data/files/${filename}.bin`;
-    let record_size = 8 * 8;
+    let record_size = 9 * 8;
     try {
         let file = await fetch(filename);
         let buf = await file.arrayBuffer(); // get the binary data
@@ -205,6 +205,63 @@ export async function trendline_binary_file_reader(filename) {
             offset += 8;
             rec.slope = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
             offset += 8
+            rec.serial_number = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            res.push(rec);
+        }
+        return res; // Return the array of parsed records
+    
+    } catch (e) {
+        console.log(`Error: ${e}`);
+    }
+}
+
+
+
+export async function order_binary_file_reader(filename) {
+    filename = `./data/files/${filename}.bin`;
+    let record_size = 12 * 8;
+    try {
+        let file = await fetch(filename);
+        let buf = await file.arrayBuffer(); // get the binary data
+        if (!buf) {
+            throw new Error(`Failed to read binary file: ${filename}`);
+        }
+
+        let record_count = buf.byteLength / record_size;
+        if (!Number.isInteger(record_count)) {
+            throw new Error(`The file size (${buf.byteLength}) is not a multiple of record size (${record_size}).`);
+        }
+        console.log(`Total Orders records found: ${record_count}`);
+        let res = [];
+        let dataView = new DataView(buf);
+        let offset = 0;
+        for (let i = 0; i < record_count; i++) {
+            let rec = {};
+            rec.id = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.external_id = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.entry_ts = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.exit_ts = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.entry_price = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.exit_price = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.sl = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.tp = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.profit = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.net_profit = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.duration = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.direction = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
             res.push(rec);
         }
         return res; // Return the array of parsed records

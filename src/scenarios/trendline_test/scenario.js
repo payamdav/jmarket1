@@ -1,6 +1,6 @@
 import { pubsub } from '../../lib/pubsub.js';
 import { Chart } from './chart.js';
-import {binary_file_reader, trendline_binary_file_reader} from '../../lib/files/binaryReader.js';
+import {binary_file_reader, trendline_binary_file_reader, order_binary_file_reader} from '../../lib/files/binaryReader.js';
 
 
 class Scenario {
@@ -61,6 +61,9 @@ class Scenario {
         await this.load_long_entry_points();
         this.up_trend_lines = await trendline_binary_file_reader("up_trend_line");
         this.current_up_trend_line = 0;
+        this.orders = await order_binary_file_reader("orders");
+        // console.log(this.orders);
+
 
     }
 
@@ -89,6 +92,42 @@ class Scenario {
         this.chart.up_trend_max.y1 = trend_line.p_start_max;
         this.chart.up_trend_max.y2 = trend_line.p_end_max;
         this.chart.up_trend_max.isHidden = false;
+        let serial_number = trend_line.serial_number;
+
+        // Draw order
+        let order = this.orders.find(o => o.external_id === serial_number);
+        if (order) {
+            this.chart.order_sl.x1 = order.entry_ts / 1000.0;
+            this.chart.order_sl.x2 = order.exit_ts / 1000.0;
+            this.chart.order_sl.y1 = order.sl;
+            this.chart.order_sl.y2 = order.sl;
+            this.chart.order_sl.isHidden = false;
+
+            this.chart.order_tp.x1 = order.entry_ts / 1000.0;
+            this.chart.order_tp.x2 = order.exit_ts / 1000.0;
+            this.chart.order_tp.y1 = order.tp;
+            this.chart.order_tp.y2 = order.tp;
+            this.chart.order_tp.isHidden = false;
+
+            this.chart.order_line.x1 = order.entry_ts / 1000.0;
+            this.chart.order_line.x2 = order.entry_ts / 1000.0;
+            this.chart.order_line.y1 = order.entry_price;
+            this.chart.order_line.y2 = order.entry_price;
+            this.chart.order_line.isHidden = false;
+
+            console.log("Order found:", order);
+            console.log("Order Direction:", order.direction);
+            console.log("Order profit:", order.profit);
+            console.log("Order Net Profit:", order.net_profit);
+            
+        }
+        else {
+            console.log("No order found for serial number:", serial_number);
+            this.chart.order_sl.isHidden = true;
+            this.chart.order_tp.isHidden = true;
+            this.chart.order_line.isHidden = true;
+        }
+
 
     }
 
