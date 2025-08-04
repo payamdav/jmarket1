@@ -110,15 +110,20 @@ class Scenario {
             this.chart.order_tp.isHidden = false;
 
             this.chart.order_line.x1 = order.entry_ts / 1000.0;
-            this.chart.order_line.x2 = order.entry_ts / 1000.0;
+            this.chart.order_line.x2 = order.exit_ts / 1000.0;
             this.chart.order_line.y1 = order.entry_price;
-            this.chart.order_line.y2 = order.entry_price;
+            this.chart.order_line.y2 = order.exit_price;
             this.chart.order_line.isHidden = false;
 
             console.log("Order found:", order);
             console.log("Order Direction:", order.direction);
             console.log("Order profit:", order.profit);
             console.log("Order Net Profit:", order.net_profit);
+            let sl_pips = Math.round(Math.abs(order.entry_price - order.sl) / order.entry_price * 10000);
+            let tp_pips = Math.round(Math.abs(order.entry_price - order.tp) / order.entry_price * 10000);
+            console.log("SL Pips:", sl_pips);
+            console.log("TP Pips:", tp_pips);
+            
             
         }
         else {
