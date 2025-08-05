@@ -58,8 +58,8 @@ class Scenario {
         await this.load_trades();
         await this.load_zigzag();
         await this.load_trade_zigzag();
-        await this.load_long_entry_points();
-        this.up_trend_lines = await trendline_binary_file_reader("up_trend_line");
+        // await this.load_long_entry_points();
+        this.up_trend_lines = await trendline_binary_file_reader("trend_line");
         this.current_up_trend_line = 0;
         this.orders = await order_binary_file_reader("orders");
         // console.log(this.orders);
