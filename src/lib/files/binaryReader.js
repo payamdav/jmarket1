@@ -217,6 +217,48 @@ export async function trendline_binary_file_reader(filename) {
 }
 
 
+export async function trendline_2points_binary_file_reader(filename) {
+    filename = `./data/files/${filename}.bin`;
+    let record_size = 6 * 8;
+    try {
+        let file = await fetch(filename);
+        let buf = await file.arrayBuffer(); // get the binary data
+        if (!buf) {
+            throw new Error(`Failed to read binary file: ${filename}`);
+        }
+
+        let record_count = buf.byteLength / record_size;
+        if (!Number.isInteger(record_count)) {
+            throw new Error(`The file size (${buf.byteLength}) is not a multiple of record size (${record_size}).`);
+        }
+        console.log(`Total records found: ${record_count}`);
+        let res = [];
+        let dataView = new DataView(buf);
+        let offset = 0;
+        for (let i = 0; i < record_count; i++) {
+            let rec = {};
+            rec.t_start = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.t_end = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.p_start_min = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8; // Move to the next field (8 bytes for double)
+            rec.p_start_max = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.p_end_min = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.p_end_max = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            res.push(rec);
+        }
+        return res; // Return the array of parsed records
+    
+    } catch (e) {
+        console.log(`Error: ${e}`);
+    }
+}
+
+
 
 export async function order_binary_file_reader(filename) {
     filename = `./data/files/${filename}.bin`;

@@ -1,6 +1,6 @@
 import { pubsub } from '../../lib/pubsub.js';
 import { Chart } from './chart.js';
-import {binary_file_reader, trendline_binary_file_reader, order_binary_file_reader} from '../../lib/files/binaryReader.js';
+import {binary_file_reader, trendline_binary_file_reader, order_binary_file_reader, trendline_2points_binary_file_reader} from '../../lib/files/binaryReader.js';
 
 
 class Scenario {
@@ -59,7 +59,7 @@ class Scenario {
         await this.load_zigzag();
         await this.load_trade_zigzag();
         // await this.load_long_entry_points();
-        this.up_trend_lines = await trendline_binary_file_reader("trend_line");
+        this.up_trend_lines = await trendline_2points_binary_file_reader("trend_line");
         this.current_up_trend_line = 0;
         this.orders = await order_binary_file_reader("orders");
         // console.log(this.orders);
