@@ -1,0 +1,209 @@
+import { pubsub } from '../../lib/pubsub.js';
+import { Chart } from './chart.js';
+import {binary_file_reader, candle_binary_file_reader} from '../../lib/files/binaryReader.js';
+
+
+class Scenario {
+    constructor() {
+        this.chart = new Chart();
+    }
+
+    async init() {
+        await this.chart.initChart('scichart-root');
+        this.chart.initAxes();
+        this.chart.initModifiers();
+        this.chart.init_annotations();
+        this.chart.init_series();
+
+        // Menu Handling
+        pubsub.subscribe('overlay_menu', (m) => {
+            if (m === 'reset') {this.chart.reset();}
+            if (m === 'fitx') {this.chart.sciChartSurface.zoomExtentsX();}
+            if (m === 'fity') {this.chart.sciChartSurface.zoomExtentsY();}
+            if (m === 'fitxy') {this.chart.sciChartSurface.zoomExtents();}
+
+            // if (m === 'previous') {this.draw_up_trend_line(this.current_up_trend_line - 1);}
+            // if (m === 'next') {this.draw_up_trend_line(this.current_up_trend_line + 1);}
+        });
+
+        pubsub.subscribe('chartClick', (d) => {
+            // console.log(d);
+            // if (d.button === 1) this.ts = d.x; // middle key
+        });
+
+        pubsub.subscribe('cmd', (cmd) => {
+            // console.log(cmd);
+            let tokens = cmd.split(' ');
+            if (isNaN(cmd)) {
+                console.log(cmd);
+                let tokens = cmd.split(' ');
+                if (cmd === 'load trades') this.load_trades();
+                if (cmd === 'draw trades') this.draw_trades();
+                if (cmd === 'draw candles 1m hl') this.draw_candle_1m_hl();
+                if (cmd === 'draw candles 1m vwap') this.draw_candle_1m_vwap();
+                if (cmd === 'draw candles 1h hl') this.draw_candle_1h_hl();
+                if (cmd === 'draw candles 1h vwap') this.draw_candle_1h_vwap();
+
+
+            } else {
+                let idx = parseInt(cmd);
+                console.log("Drawing up trend line:", idx);
+                this.draw_up_trend_line(idx);
+            }
+        });
+    }
+
+    async run() {
+        await this.init();
+        await this.load_trades();
+        await this.load_candle_1s();
+        await this.load_candle_60s();
+        await this.load_candle_1h();
+        // await this.load_zigzag();
+        // await this.load_trade_zigzag();
+        // await this.load_long_entry_points();
+        // this.up_trend_lines = await trendline_2points_binary_file_reader("trend_line");
+        // this.current_up_trend_line = 0;
+        // this.orders = await order_binary_file_reader("orders");
+        // console.log(this.orders);
+
+
+    }
+
+    async load_trades() {
+        let [t, l] = await binary_file_reader("trades", "size_t,double");
+        // this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Trades", color: "#FF6600", isDigitalLine: true, strokeThickness: 2});
+        this.chart.draw_scatter({t: t.map(x => x / 1000.0), l: l, name: "Trades", color: "#FF6600", size: 2});
+    }
+
+    async load_candle_1s() {
+        let c = await candle_binary_file_reader("candles_1s");
+        this.chart.draw_candlestick({t: c.t.map(x => x / 1000.0 + 0.5), o: c.o, h: c.h, l: c.l, c: c.c, name: "1s Candles", color: "#FFFFFF"});
+        this.chart.draw_line({t: c.t.map(x => x / 1000.0 + 0.5), l: c.vwap, name: "1s VWAP", color: "#FFFF00", strokeThickness: 1});
+    }
+
+    async load_candle_60s() {
+        let c = await candle_binary_file_reader("candles_60s");
+        this.chart.draw_candlestick({t: c.t.map(x => x / 1000.0 + 30), o: c.o, h: c.h, l: c.l, c: c.c, name: "60s Candles", color: "#FFFFFF"});
+        this.chart.draw_line({t: c.t.map(x => x / 1000.0 + 30), l: c.vwap, name: "60s VWAP", color: "#00FF00", strokeThickness: 1});
+    }
+
+    async load_candle_1h() {
+        let c = await candle_binary_file_reader("candles_1h");
+        this.chart.draw_candlestick({t: c.t.map(x => x / 1000.0 + 1800), o: c.o, h: c.h, l: c.l, c: c.c, name: "1h Candles", color: "#FFFFFF"});
+        this.chart.draw_line({t: c.t.map(x => x / 1000.0 + 1800), l: c.vwap, name: "1h VWAP", color: "#FF00FF", strokeThickness: 1});
+    }
+
+    draw_up_trend_line(n) {
+        if (n >= this.up_trend_lines.length || n < 0) {
+            console.error("No more up trend lines to draw");
+            this.chart.up_trend_min.isHidden = true;
+            this.chart.up_trend_max.isHidden = true;
+            return;
+        }
+        this.current_up_trend_line = n;
+        let trend_line = this.up_trend_lines[n];
+        console.log("Drawing up trend line:", n, trend_line);
+        this.chart.up_trend_min.x1 = trend_line.t_start / 1000.0;
+        this.chart.up_trend_min.x2 = trend_line.t_end / 1000.0;
+        this.chart.up_trend_min.y1 = trend_line.p_start_min;
+        this.chart.up_trend_min.y2 = trend_line.p_end_min;
+        this.chart.up_trend_min.isHidden = false;
+        this.chart.up_trend_max.x1 = trend_line.t_start / 1000.0;
+        this.chart.up_trend_max.x2 = trend_line.t_end / 1000.0;
+        this.chart.up_trend_max.y1 = trend_line.p_start_max;
+        this.chart.up_trend_max.y2 = trend_line.p_end_max;
+        this.chart.up_trend_max.isHidden = false;
+        let serial_number = trend_line.serial_number;
+
+        // Draw order
+        let order = this.orders.find(o => o.external_id === serial_number);
+        if (order) {
+            this.chart.order_sl.x1 = order.entry_ts / 1000.0;
+            this.chart.order_sl.x2 = order.exit_ts / 1000.0;
+            this.chart.order_sl.y1 = order.sl;
+            this.chart.order_sl.y2 = order.sl;
+            this.chart.order_sl.isHidden = false;
+
+            this.chart.order_tp.x1 = order.entry_ts / 1000.0;
+            this.chart.order_tp.x2 = order.exit_ts / 1000.0;
+            this.chart.order_tp.y1 = order.tp;
+            this.chart.order_tp.y2 = order.tp;
+            this.chart.order_tp.isHidden = false;
+
+            this.chart.order_line.x1 = order.entry_ts / 1000.0;
+            this.chart.order_line.x2 = order.exit_ts / 1000.0;
+            this.chart.order_line.y1 = order.entry_price;
+            this.chart.order_line.y2 = order.exit_price;
+            this.chart.order_line.isHidden = false;
+
+            console.log("Order found:", order);
+            console.log("Order Direction:", order.direction);
+            console.log("Order profit:", order.profit);
+            console.log("Order Net Profit:", order.net_profit);
+            let sl_pips = Math.round(Math.abs(order.entry_price - order.sl) / order.entry_price * 10000);
+            let tp_pips = Math.round(Math.abs(order.entry_price - order.tp) / order.entry_price * 10000);
+            console.log("SL Pips:", sl_pips);
+            console.log("TP Pips:", tp_pips);
+            
+            
+        }
+        else {
+            console.log("No order found for serial number:", serial_number);
+            this.chart.order_sl.isHidden = true;
+            this.chart.order_tp.isHidden = true;
+            this.chart.order_line.isHidden = true;
+        }
+
+
+    }
+
+    async load_zigzag() {
+        let [t, l] = await binary_file_reader("zigzag", "size_t,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "up trend zigzag", color: "#006666", strokeThickness: 2});
+    }
+
+    async load_trade_zigzag() {
+        let [t, l] = await binary_file_reader("trades_zigzag", "size_t,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "trades_zigzag", strokeThickness: 2});
+    }
+
+    async load_long_entry_points() {
+        let [t, l] = await binary_file_reader("long_entry_points", "size_t,double");
+        this.chart.draw_scatter({t: t.map(x => x / 1000.0), l: l, name: "long_entry_points", color: "#00FF00", size: 5});
+    }
+
+    async load_stepper() {
+        let [t, l] = await binary_file_reader("adausdt_stepper", "size_t,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "stepper", color: "#FFFFFF", isDigitalLine: true, strokeThickness: 2});
+    }
+
+    async load_vols() {
+        let [t, v, vs, vb, vd] = await binary_file_reader("adausdt_vbox", "size_t,double,double,double,double");
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: v, name: "Volume", color: "#FF6600", yAxisId: "yAxisVol"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vs, name: "Volumes", color: "#FF6600", yAxisId: "yAxisVols"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vb, name: "Volumeb", color: "#FF6600", yAxisId: "yAxisVolb"});
+        this.chart.draw_columns({t: t.map(x => x / 1000.0), l: vd, name: "Volumed", color: "#FF6600", yAxisId: "yAxisVold"});
+    }
+
+
+
+
+    async load_volume_areas() {
+        let [rank, ts_center, ts_start, ts_end, level_center, max_level, avg_volume] = await binary_file_reader("volume_areas", "size_t,size_t,size_t,size_t,size_t,size_t,double");
+        this.chart.draw_errorbar({
+            x: ts_center.map(x => x / 1000.0),
+            y: level_center,
+            high: ts_end.map(x => x / 1000.0),
+            low: ts_start.map(x => x / 1000.0),
+            name: "Volume Areas",
+            color: "#FF0000",
+            strokeThickness: 1,
+            direction: "horizontal",
+        });
+    }
+
+}
+
+let scenario = new Scenario();
+scenario.run();

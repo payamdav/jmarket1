@@ -10,6 +10,6 @@
     "esbuild": "0.25.0"
   },
   "dependencies": {
-    "scichart": "^3.5.727"
+    "scichart": "^4.0.890"
   }
 }
