@@ -59,6 +59,9 @@ class Scenario {
         await this.load_candle_1s();
         await this.load_candle_60s();
         await this.load_candle_1h();
+        await this.lowess_1s();
+        await this.lowess_60s();
+        await this.lowess_1h();
         // await this.load_zigzag();
         // await this.load_trade_zigzag();
         // await this.load_long_entry_points();
@@ -93,6 +96,22 @@ class Scenario {
         this.chart.draw_candlestick({t: c.t.map(x => x / 1000.0 + 1800), o: c.o, h: c.h, l: c.l, c: c.c, name: "1h Candles", color: "#FFFFFF"});
         this.chart.draw_line({t: c.t.map(x => x / 1000.0 + 1800), l: c.vwap, name: "1h VWAP", color: "#FF00FF", strokeThickness: 1});
     }
+
+    async lowess_1s() {
+        let [t, l, w] = await binary_file_reader("lowess_1s", "size_t,double,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Lowess 1s", color: "#FFFFFF", isDigitalLine: false, strokeThickness: 2});
+    }
+
+    async lowess_60s() {
+        let [t, l, w] = await binary_file_reader("lowess_60s", "size_t,double,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Lowess 60s", color: "#00FF00", isDigitalLine: false, strokeThickness: 2});
+    }
+
+    async lowess_1h() {
+        let [t, l, w] = await binary_file_reader("lowess_1h", "size_t,double,double");
+        this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Lowess 1h", color: "#FF00FF", isDigitalLine: false, strokeThickness: 2});
+    }
+
 
     draw_up_trend_line(n) {
         if (n >= this.up_trend_lines.length || n < 0) {
