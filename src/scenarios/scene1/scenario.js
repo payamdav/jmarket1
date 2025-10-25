@@ -1,6 +1,6 @@
 import { pubsub } from '../../lib/pubsub.js';
 import { Chart } from './chart.js';
-import {binary_file_reader, candle_binary_file_reader} from '../../lib/files/binaryReader.js';
+import {binary_file_reader, candle_binary_file_reader, candles_full_binary_file_reader} from '../../lib/files/binaryReader.js';
 
 
 class Scenario {
@@ -57,11 +57,11 @@ class Scenario {
         await this.init();
         await this.load_trades();
         await this.load_candle_1s();
-        await this.load_candle_60s();
-        await this.load_candle_1h();
-        await this.lowess_1s();
-        await this.lowess_60s();
-        await this.lowess_1h();
+        // await this.load_candle_60s();
+        // await this.load_candle_1h();
+        // await this.lowess_1s();
+        // await this.lowess_60s();
+        // await this.lowess_1h();
         // await this.load_zigzag();
         // await this.load_trade_zigzag();
         // await this.load_long_entry_points();
@@ -74,13 +74,14 @@ class Scenario {
     }
 
     async load_trades() {
-        let [t, l] = await binary_file_reader("trades", "size_t,double");
+        let [t, l] = await binary_file_reader("chart_trades", "size_t,double");
         // this.chart.draw_line({t: t.map(x => x / 1000.0), l: l, name: "Trades", color: "#FF6600", isDigitalLine: true, strokeThickness: 2});
         this.chart.draw_scatter({t: t.map(x => x / 1000.0), l: l, name: "Trades", color: "#FF6600", size: 2});
     }
 
     async load_candle_1s() {
-        let c = await candle_binary_file_reader("candles_1s");
+        let c = await candles_full_binary_file_reader("chart_candles");
+        console.log(c);
         this.chart.draw_candlestick({t: c.t.map(x => x / 1000.0 + 0.5), o: c.o, h: c.h, l: c.l, c: c.c, name: "1s Candles", color: "#FFFFFF"});
         this.chart.draw_line({t: c.t.map(x => x / 1000.0 + 0.5), l: c.vwap, name: "1s VWAP", color: "#FFFF00", strokeThickness: 1});
     }

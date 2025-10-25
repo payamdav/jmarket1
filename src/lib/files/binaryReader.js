@@ -388,3 +388,86 @@ export async function candle_binary_file_reader(filename) {
     }
 }
 
+
+export async function candles_full_binary_file_reader(filename) {
+    filename = `./data/files/${filename}.bin`;
+    let record_size = 13 * 8;
+    try {
+        let file = await fetch(filename);
+        let buf = await file.arrayBuffer(); // get the binary data
+        if (!buf) {
+            throw new Error(`Failed to read binary file: ${filename}`);
+        }
+
+        let record_count = buf.byteLength / record_size;
+        if (!Number.isInteger(record_count)) {
+            throw new Error(`The file size (${buf.byteLength}) is not a multiple of record size (${record_size}).`);
+        }
+        console.log(`Total Candles found: ${record_count}`);
+        let t = [];
+        let o = [];
+        let h = [];
+        let l = [];
+        let c = [];
+        let vwap = [];
+        let n = [];
+        let v = [];
+        let vs = [];
+        let vb = [];
+        let q = [];
+        let qs = [];
+        let qb = [];
+
+        let dataView = new DataView(buf);
+        let offset = 0;
+        for (let i = 0; i < record_count; i++) {
+            let rec = {};
+            rec.t = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.o = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.h = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.l = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.c = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.vwap = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.n = Number(dataView.getBigUint64(offset, /* littleEndian= */ true)); // Read 64-bit unsigned integer (size_t)
+            offset += 8; // Move to the next field (8 bytes for size_t)
+            rec.v = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.vs = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.vb = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.q = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.qs = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+            rec.qb = dataView.getFloat64(offset, /* littleEndian= */ true); // Read 64-bit float (double)
+            offset += 8
+
+            t.push(rec.t);
+            o.push(rec.o);
+            h.push(rec.h);
+            l.push(rec.l);
+            c.push(rec.c);
+            vwap.push(rec.vwap);
+            n.push(rec.n);
+            v.push(rec.v);
+            vs.push(rec.vs);
+            vb.push(rec.vb);
+            q.push(rec.q);
+            qs.push(rec.qs);
+            qb.push(rec.qb);
+        }
+        let res = { t, o, h, l, c, vwap, n, v, vs, vb, q, qs, qb };
+        return res; // Return the array of parsed records
+    
+    } catch (e) {
+        console.log(`Error: ${e}`);
+    }
+}
+
