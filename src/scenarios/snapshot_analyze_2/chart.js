@@ -14,6 +14,7 @@ import {
     ZoomPanModifier,
     ZoomExtentsModifier,
     CursorModifier,
+    LegendModifier,
     HorizontalLineAnnotation,
     VerticalLineAnnotation,
     EAnnotationLayer
@@ -22,6 +23,10 @@ import {
 SciChartSurface.UseCommunityLicense();
 
 export class Chart {
+    constructor() {
+        this.seriesMap = new Map();
+    }
+
     async init(containerId) {
         const { sciChartSurface, wasmContext } = await SciChartSurface.create(containerId, {
             theme: new SciChartJsNavyTheme(),
@@ -58,6 +63,9 @@ export class Chart {
         this.sciChartSurface.chartModifiers.add(new ZoomPanModifier());
         this.sciChartSurface.chartModifiers.add(new ZoomExtentsModifier());
         this.sciChartSurface.chartModifiers.add(new CursorModifier());
+
+        this.LegendModifier = new LegendModifier({ showCheckboxes: true});
+        this.sciChartSurface.chartModifiers.add(this.LegendModifier);
 
         const zeroLine = new HorizontalLineAnnotation({
             y1: 0,
@@ -96,6 +104,7 @@ export class Chart {
         });
 
         this.sciChartSurface.renderableSeries.add(scatterSeries);
+        this.seriesMap.set('prices', scatterSeries);
     }
 
     drawVolume(x, y) {
@@ -116,9 +125,11 @@ export class Chart {
         });
 
         this.sciChartSurface.renderableSeries.add(columnSeries);
+        this.seriesMap.set('volume', columnSeries);
     }
 
-    drawSegments(segments, color, name) {
+    drawSegments(segments, color, name = "Segments") {
+        const segmentSeries = [];
         for (let i = 0; i < segments.length; i++) {
             const seg = segments[i];
             const x = [seg.start_idx, seg.end_idx];
@@ -128,11 +139,12 @@ export class Chart {
             ];
 
             const dataSeries = new XyDataSeries(this.wasmContext, {
+                id: `segment-${i}`,
                 xValues: x,
                 yValues: y,
                 dataSeriesName: i === 0 ? name : undefined,
                 containsNaN: false,
-                isSorted: true
+                isSorted: true,
             });
 
             const lineSeries = new FastLineRenderableSeries(this.wasmContext, {
@@ -143,6 +155,28 @@ export class Chart {
             });
 
             this.sciChartSurface.renderableSeries.add(lineSeries);
+            segmentSeries.push(lineSeries);
         }
+        this.seriesMap.set('segments', segmentSeries);
+    }
+
+    drawLowessSmoothed(x, y) {
+        const dataSeries = new XyDataSeries(this.wasmContext, {
+            xValues: x,
+            yValues: y,
+            dataSeriesName: "LOWESS Smoothed",
+            containsNaN: false,
+            isSorted: true
+        });
+
+        const lineSeries = new FastLineRenderableSeries(this.wasmContext, {
+            dataSeries: dataSeries,
+            stroke: "#FFA500",
+            strokeThickness: 3,
+            isVisible: true
+        });
+
+        this.sciChartSurface.renderableSeries.add(lineSeries);
+        this.seriesMap.set('lowess', lineSeries);
     }
 }

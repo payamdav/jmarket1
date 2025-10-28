@@ -7,6 +7,7 @@ class Scenario {
         this.prices = [];
         this.volumes = [];
         this.segments = [];
+        this.lowess_smoothed = [];
     }
 
     async init() {
@@ -101,6 +102,31 @@ class Scenario {
         }
     }
 
+    async load_lowess_smoothed() {
+        try {
+            const response = await fetch('./data/files/snapshot_l1dn1d_lowess_smoothed.bin');
+            const buffer = await response.arrayBuffer();
+            const dataView = new DataView(buffer);
+
+            // Each LowessResult is: ts (8 bytes), y (8 bytes), w (8 bytes) = 24 bytes total
+            const count = buffer.byteLength / 24;
+
+            this.lowess_smoothed = [];
+            for (let i = 0; i < count; i++) {
+                const offset = i * 24;
+                this.lowess_smoothed.push({
+                    ts: Number(dataView.getBigUint64(offset, true)),
+                    y: dataView.getFloat64(offset + 8, true),
+                    w: dataView.getFloat64(offset + 16, true)
+                });
+            }
+
+            console.log(`Loaded ${this.lowess_smoothed.length} LOWESS smoothed points`);
+        } catch (e) {
+            console.error('Error loading LOWESS smoothed data:', e);
+        }
+    }
+
     draw_all() {
         if (this.prices.length > 0) {
             const x = Array.from({length: this.prices.length}, (_, i) => i);
@@ -115,6 +141,12 @@ class Scenario {
         if (this.segments.length > 0) {
             this.chart.drawSegments(this.segments, "#FF00FF");
         }
+
+        if (this.lowess_smoothed.length > 0) {
+            const x = Array.from({length: this.lowess_smoothed.length}, (_, i) => i);
+            const y = this.lowess_smoothed.map(point => point.y);
+            this.chart.drawLowessSmoothed(x, y);
+        }
     }
 
     async run() {
@@ -123,12 +155,14 @@ class Scenario {
         await this.load_prices();
         await this.load_volumes();
         await this.load_segments();
+        await this.load_lowess_smoothed();
         this.draw_all();
 
         if (this.metadata) {
             console.log(`Symbol: ${this.metadata.symbol}`);
             console.log(`Timestamp: ${this.metadata.ts_datetime}`);
             console.log(`Current VWAP: ${this.metadata.current_vwap}`);
+            console.log(`LOWESS half_neighbor: ${this.metadata.lowess_half_neighbor}`);
         }
     }
 }
