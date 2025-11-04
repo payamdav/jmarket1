@@ -1,13 +1,14 @@
 import {
     SciChartSurface,
     NumericAxis,
+    DateTimeNumericAxis,
     EAutoRange,
     EAxisAlignment,
-    LeftAlignedOuterVerticallyStackedAxisLayoutStrategy,
-    XyDataSeries,
     OhlcDataSeries,
+    XyDataSeries,
     FastCandlestickRenderableSeries,
     FastLineRenderableSeries,
+    FastLineSegmentRenderableSeries,
     SciChartJsNavyTheme,
     MouseWheelZoomModifier,
     ZoomPanModifier,
@@ -34,7 +35,7 @@ export class Chart {
         this.wasmContext = wasmContext;
 
         // X axis (candle index)
-        const xAxis = new NumericAxis(wasmContext, { axisTitle: "Candle Index" });
+        const xAxis = new DateTimeNumericAxis(wasmContext, { axisTitle: "Time" });
         this.sciChartSurface.xAxes.add(xAxis);
 
         // Y axis (price)
@@ -53,15 +54,13 @@ export class Chart {
         this.sciChartSurface.chartModifiers.add(new LegendModifier({ showCheckboxes: true }));
     }
 
-    drawCandles(candles, indices, timeframe, dataPointWidth = 0.7) {
-        const xValues = [];
+    drawCandles(candles, xValues, timeframe, dataPointWidth = 0.7) {
         const openValues = [];
         const highValues = [];
         const lowValues = [];
         const closeValues = [];
 
         for (let i = 0; i < candles.length; i++) {
-            xValues.push(indices[i]);
             openValues.push(candles[i].open);
             highValues.push(candles[i].high);
             lowValues.push(candles[i].low);
@@ -74,12 +73,18 @@ export class Chart {
             highValues: highValues,
             lowValues: lowValues,
             closeValues: closeValues,
-            dataSeriesName: `Candles ${timeframe}`
+            dataSeriesName: `Candles ${timeframe}`,
+            containsNaN: false,
+            isSorted: true
         });
 
-        // Different colors for different timeframes
         let brushUp, brushDown, strokeUp, strokeDown;
         if (timeframe === '1h') {
+            brushUp = "#FF000050";
+            brushDown = "#0000FF50";
+            strokeUp = "#FF0000";
+            strokeDown = "#0000FF";
+        } else if (timeframe === '1m') {
             brushUp = "#0000FF50";
             brushDown = "#FF00FF50";
             strokeUp = "#0000FF";
@@ -104,30 +109,95 @@ export class Chart {
         this.sciChartSurface.renderableSeries.add(candlestickSeries);
     }
 
-    drawTrend(trend, startIdx, endIdx, trendNumber) {
-        // Calculate prices at start and end using linear equation: y = slope * x + intercept
-        // x is the candle number within the trend (0 to candle_count-1)
-        const startPrice = trend.slope * 0 + trend.intercept;
-        const endPrice = trend.slope * (trend.candle_count - 1) + trend.intercept;
+    drawTrend(trends) {
+        const xValues = [];
+        const yValues = [];
 
-        const xValues = [startIdx, endIdx];
-        const yValues = [startPrice, endPrice];
+        for (const trend of trends) {
+            const startPrice = trend.slope * 0 + trend.intercept;
+            const endPrice = trend.slope * (trend.candle_count - 1) + trend.intercept;
+
+            xValues.push(trend.start_ts / 1000, trend.end_ts / 1000);
+            yValues.push(startPrice, endPrice);
+        }
 
         const dataSeries = new XyDataSeries(this.wasmContext, {
             xValues: xValues,
             yValues: yValues,
-            dataSeriesName: `Trend ${trendNumber}`
+            dataSeriesName: "Trends",
+            containsNaN: false,
+            isSorted: true
         });
 
-        // Color based on slope: green for up, red for down
-        const color = trend.slope > 0 ? "#00FF00" : "#FF0000";
-
-        const lineSeries = new FastLineRenderableSeries(this.wasmContext, {
+        const lineSeries = new FastLineSegmentRenderableSeries(this.wasmContext, {
             dataSeries: dataSeries,
-            stroke: color,
+            stroke: "#00FF00",
             strokeThickness: 3
         });
 
         this.sciChartSurface.renderableSeries.add(lineSeries);
     }
+
+    drawZigzag1(points) {
+        const xValues = [];
+        const yValues = [];
+        let lastTrendId = -1;
+
+        for (const point of points) {
+            if (lastTrendId !== -1 && lastTrendId !== point.trend_id) {
+                xValues.push(point.ts / 1000);
+                yValues.push(NaN);
+            }
+            xValues.push(point.ts / 1000);
+            yValues.push(point.price);
+            lastTrendId = point.trend_id;
+        }
+
+        const dataSeries = new XyDataSeries(this.wasmContext, {
+            xValues: xValues,
+            yValues: yValues,
+            dataSeriesName: "Zigzag 1",
+            containsNaN: true
+        });
+
+        const lineSeries = new FastLineRenderableSeries(this.wasmContext, {
+            dataSeries: dataSeries,
+            stroke: "#FFFFFF",
+            strokeThickness: 2
+        });
+
+        this.sciChartSurface.renderableSeries.add(lineSeries);
+    }
+
+    drawZigzag2(points) {
+        const xValues = [];
+        const yValues = [];
+        let lastTrendId = -1;
+
+        for (const point of points) {
+            if (lastTrendId !== -1 && lastTrendId !== point.trend_id) {
+                xValues.push(point.ts / 1000);
+                yValues.push(NaN);
+            }
+            xValues.push(point.ts / 1000);
+            yValues.push(point.price);
+            lastTrendId = point.trend_id;
+        }
+
+        const dataSeries = new XyDataSeries(this.wasmContext, {
+            xValues: xValues,
+            yValues: yValues,
+            dataSeriesName: "Zigzag 2",
+            containsNaN: true
+        });
+
+        const lineSeries = new FastLineRenderableSeries(this.wasmContext, {
+            dataSeries: dataSeries,
+            stroke: "#FFFF00", // Yellow color for zigzag_2
+            strokeThickness: 2
+        });
+
+        this.sciChartSurface.renderableSeries.add(lineSeries);
+    }
+
 }
